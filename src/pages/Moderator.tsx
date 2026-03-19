@@ -115,10 +115,10 @@ export default function Moderator() {
   const [ratingFilter, setRatingFilter] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
 
   function approve(id: string) {
-    setReviews((prev) => prev.map((r) => r.id === id ? { ...r, status: 'approved' } : r));
+    setReviews((prev) => prev.map((r) => r.id === id ? { ...r, status: 'approved' as ReviewStatus } : r));
   }
   function reject(id: string) {
-    setReviews((prev) => prev.map((r) => r.id === id ? { ...r, status: 'rejected' } : r));
+    setReviews((prev) => prev.map((r) => r.id === id ? { ...r, status: 'rejected' as ReviewStatus } : r));
   }
   function remove(id: string) {
     setReviews((prev) => prev.filter((r) => r.id !== id));
@@ -223,7 +223,7 @@ export default function Moderator() {
           </div>
         ) : (
           <div className="space-y-3">
-            {displayed.map((review, i) => (
+            {displayed.map((review) => (
               <ModCard
                 key={review.id}
                 review={review}
