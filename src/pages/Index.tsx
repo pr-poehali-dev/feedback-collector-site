@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ReviewCard from '@/components/ReviewCard';
 import ReviewForm from '@/components/ReviewForm';
 import FilterBar, { SortOption, RatingFilter } from '@/components/FilterBar';
-import { INITIAL_REVIEWS, Review } from '@/data/reviews';
+import { Review } from '@/data/reviews';
 import Icon from '@/components/ui/icon';
+import { fetchReviews, createReview, reactToReview } from '@/api/reviews';
 
 function RatingSummary({ reviews }: { reviews: Review[] }) {
   const approved = reviews.filter((r) => r.status === 'approved');
@@ -51,49 +52,36 @@ function RatingSummary({ reviews }: { reviews: Review[] }) {
 }
 
 export default function Index() {
-  const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState<SortOption>('newest');
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>(0);
 
-  function handleReact(id: string, reaction: 'like' | 'dislike') {
+  useEffect(() => {
+    fetchReviews().then((data) => {
+      setReviews(data);
+      setLoading(false);
+    });
+  }, []);
+
+  async function handleReact(id: string, reaction: 'like' | 'dislike') {
+    const review = reviews.find((r) => r.id === id);
+    if (!review) return;
+    const same = review.userReaction === reaction;
+    const newReaction = same ? null : reaction;
+    const updated = await reactToReview(id, newReaction, review.userReaction);
     setReviews((prev) =>
-      prev.map((r) => {
-        if (r.id !== id) return r;
-        const same = r.userReaction === reaction;
-        const wasLike = r.userReaction === 'like';
-        const wasDislike = r.userReaction === 'dislike';
-        return {
-          ...r,
-          userReaction: same ? null : reaction,
-          likes:
-            reaction === 'like'
-              ? r.likes + (same ? -1 : 1)
-              : wasLike
-              ? r.likes - 1
-              : r.likes,
-          dislikes:
-            reaction === 'dislike'
-              ? r.dislikes + (same ? -1 : 1)
-              : wasDislike
-              ? r.dislikes - 1
-              : r.dislikes,
-        };
-      })
+      prev.map((r) =>
+        r.id === id
+          ? { ...r, userReaction: newReaction, likes: updated.likes, dislikes: updated.dislikes }
+          : r
+      )
     );
   }
 
-  function handleSubmit(name: string, text: string, rating: number) {
-    const newReview: Review = {
-      id: Date.now().toString(),
-      name,
-      text,
-      rating,
-      date: new Date().toISOString().split('T')[0],
-      status: 'pending',
-      likes: 0,
-      dislikes: 0,
-      userReaction: null,
-    };
+  async function handleSubmit(name: string, text: string, rating: number) {
+    const date = new Date().toISOString().split('T')[0];
+    const newReview = await createReview({ name, text, rating, date });
     setReviews((prev) => [newReview, ...prev]);
   }
 
@@ -148,7 +136,12 @@ export default function Index() {
             total={displayed.length}
           />
 
-          {displayed.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-16 text-muted-foreground fade-in">
+              <div className="text-3xl mb-2">⏳</div>
+              <p className="text-sm">Загружаем отзывы...</p>
+            </div>
+          ) : displayed.length === 0 ? (
             <div className="text-center py-16 text-muted-foreground fade-in">
               <div className="text-3xl mb-2">🔍</div>
               <p className="text-sm">Нет отзывов по выбранным фильтрам</p>

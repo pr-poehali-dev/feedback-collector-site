@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { INITIAL_REVIEWS, Review, ReviewStatus, getAvatarColor } from '@/data/reviews';
+import { Review, ReviewStatus, getAvatarColor } from '@/data/reviews';
 import Icon from '@/components/ui/icon';
+import { fetchReviews, updateStatus, deleteReview } from '@/api/reviews';
 
 type StatusFilter = 'all' | ReviewStatus;
 
@@ -110,17 +111,30 @@ const STATUS_TABS: { value: StatusFilter; label: string }[] = [
 const RATING_FILTERS = [0, 5, 4, 3, 2, 1] as const;
 
 export default function Moderator() {
-  const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [ratingFilter, setRatingFilter] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
 
-  function approve(id: string) {
+  useEffect(() => {
+    fetchReviews().then((data) => {
+      setReviews(data);
+      setLoading(false);
+    });
+  }, []);
+
+  async function approve(id: string) {
+    await updateStatus(id, 'approved');
     setReviews((prev) => prev.map((r) => r.id === id ? { ...r, status: 'approved' as ReviewStatus } : r));
   }
-  function reject(id: string) {
+
+  async function reject(id: string) {
+    await updateStatus(id, 'rejected');
     setReviews((prev) => prev.map((r) => r.id === id ? { ...r, status: 'rejected' as ReviewStatus } : r));
   }
-  function remove(id: string) {
+
+  async function remove(id: string) {
+    await deleteReview(id);
     setReviews((prev) => prev.filter((r) => r.id !== id));
   }
 
@@ -216,7 +230,12 @@ export default function Moderator() {
 
         <div className="text-xs text-muted-foreground mb-4">{displayed.length} отзывов</div>
 
-        {displayed.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-16 text-muted-foreground fade-in">
+            <div className="text-3xl mb-2">⏳</div>
+            <p className="text-sm">Загружаем отзывы...</p>
+          </div>
+        ) : displayed.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground fade-in">
             <div className="text-3xl mb-2">📭</div>
             <p className="text-sm">Нет отзывов по выбранным фильтрам</p>
