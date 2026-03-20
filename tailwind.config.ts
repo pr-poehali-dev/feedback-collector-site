@@ -7,7 +7,7 @@ export default {
 		"./components/**/*.{ts,tsx}",
 		"./app/**/*.{ts,tsx}",
 		"./src/**/*.{ts,tsx}",
-			"./1773936340104964235.html"
+		"./1773936340104964235.html"
 	],
 	prefix: "",
 	theme: {
@@ -62,7 +62,9 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				gold: 'hsl(var(--gold))',
+				'gold-muted': 'hsl(var(--gold-muted))',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -71,10 +73,6 @@ export default {
 			},
 			fontFamily: {
 				'golos': ['Golos Text', 'sans-serif'],
-			},
-			colors: {
-				gold: 'hsl(var(--gold))',
-				'gold-muted': 'hsl(var(--gold-muted))',
 			},
 			keyframes: {
 				'accordion-down': {

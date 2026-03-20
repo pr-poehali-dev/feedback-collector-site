@@ -10,31 +10,34 @@ interface FilterBarProps {
 }
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: 'newest', label: 'Новые' },
-  { value: 'oldest', label: 'Старые' },
-  { value: 'highest', label: 'Хорошие' },
-  { value: 'lowest', label: 'Плохие' },
-  { value: 'helpful', label: 'Полезные' },
+  { value: 'newest', label: 'Сначала новые' },
+  { value: 'oldest', label: 'Сначала старые' },
+  { value: 'highest', label: 'Сначала хорошие' },
+  { value: 'lowest', label: 'Сначала плохие' },
+  { value: 'helpful', label: 'Самые полезные' },
 ];
+
+const STAR_FILTERS = [5, 4, 3, 2, 1] as const;
 
 export default function FilterBar({ sort, ratingFilter, onSort, onRating, total }: FilterBarProps) {
   return (
     <div className="space-y-3 mb-6">
       <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">
-          {total} {total === 1 ? 'отзыв' : total < 5 ? 'отзыва' : 'отзывов'}
-        </span>
+        <p className="text-sm font-medium text-foreground">
+          {total}{' '}
+          {total === 1 ? 'отзыв' : total >= 2 && total <= 4 ? 'отзыва' : 'отзывов'}
+        </p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5">
         {SORT_OPTIONS.map((opt) => (
           <button
             key={opt.value}
             onClick={() => onSort(opt.value)}
-            className={`text-xs px-3.5 py-1.5 rounded-full border font-medium transition-all slide-in ${
+            className={`text-xs px-3.5 py-1.5 rounded-full border font-medium transition-all ${
               sort === opt.value
-                ? 'bg-foreground text-primary-foreground border-foreground'
-                : 'bg-white border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground'
+                ? 'bg-foreground text-white border-foreground'
+                : 'bg-white border-border text-muted-foreground hover:border-foreground/25 hover:text-foreground'
             }`}
           >
             {opt.label}
@@ -42,33 +45,32 @@ export default function FilterBar({ sort, ratingFilter, onSort, onRating, total 
         ))}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs text-muted-foreground">Рейтинг:</span>
-        <div className="flex gap-1.5">
+        <button
+          onClick={() => onRating(0)}
+          className={`text-xs px-3 py-1.5 rounded-full border transition-all font-medium ${
+            ratingFilter === 0
+              ? 'bg-foreground text-white border-foreground'
+              : 'bg-white border-border text-muted-foreground hover:border-foreground/25 hover:text-foreground'
+          }`}
+        >
+          Все
+        </button>
+        {STAR_FILTERS.map((r) => (
           <button
-            onClick={() => onRating(0)}
-            className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
-              ratingFilter === 0
-                ? 'bg-foreground text-primary-foreground border-foreground'
-                : 'bg-white border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground'
+            key={r}
+            onClick={() => onRating(r)}
+            className={`text-xs px-3 py-1.5 rounded-full border transition-all flex items-center gap-1 font-medium ${
+              ratingFilter === r
+                ? 'bg-foreground text-white border-foreground'
+                : 'bg-white border-border text-muted-foreground hover:border-foreground/25 hover:text-foreground'
             }`}
           >
-            Все
+            <span style={{ color: ratingFilter === r ? 'hsl(43,96%,75%)' : 'hsl(43,96%,50%)' }}>★</span>
+            {r}
           </button>
-          {([5, 4, 3, 2, 1] as RatingFilter[]).map((r) => (
-            <button
-              key={r}
-              onClick={() => onRating(r)}
-              className={`text-xs px-3 py-1.5 rounded-full border transition-all flex items-center gap-1 ${
-                ratingFilter === r
-                  ? 'bg-foreground text-primary-foreground border-foreground'
-                  : 'bg-white border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground'
-              }`}
-            >
-              <span style={{ color: ratingFilter === r ? 'hsl(43,96%,75%)' : 'hsl(43,96%,56%)' }}>★</span> {r}
-            </button>
-          ))}
-        </div>
+        ))}
       </div>
     </div>
   );
